@@ -223,3 +223,37 @@ File `docker-compose.yml` sử dụng định dạng YAML để định nghĩa v
 * Thêm 1 Node `fillter` nối giữa Node `Kiểm tra ngưỡng nhiệt` và `Node Soạn tin Telegram` để chỉ gửi thông báo nhiệt độ 1 lần và khi nhiệt độ thay đổi thì mới gửi lại để tránh bị spam
 
   <img width="652" height="552" alt="image" src="https://github.com/user-attachments/assets/58044492-3a1c-42cd-93b7-85388f8c662e" />
+
+### 5. Trực quan hóa dữ liệu thời gian thực với Grafana
+
+* Truy cập vào tên miền `https://grafana.nguyenmanhhieu.id.vn` và đăng nhập với `Username: admin`, `Password: admin`. Sau khi đăng nhập xong Grafana sẽ yêu cầu đổi mật khẩu mới
+
+* Kết nối Grafana với InfluxDB
+
+  * Ở menu bên trái chọn Connections -> Chọn Data sources, bấm nút Add data source và chọn InfluxDB.
+ 
+    <img width="1918" height="1025" alt="image" src="https://github.com/user-attachments/assets/577263b8-077b-4a39-aa2c-e89ff803d09e" />
+
+  * Cấu hình như sau: Query Language chọn `Flux` (vì đang dùng InfluxDB bản 2.x), URL điền `http://influxdb:8086`, tại phần InfluxDB Details: Organization: điền `tnut`, Token điền `supersecrettoken123`, Default Bucket điền `weather_data`. Sau khi cấu hình xong bấm Save & test.
+ 
+    <img width="1917" height="1017" alt="image" src="https://github.com/user-attachments/assets/117f8a53-1a12-4282-b4cb-05b52e86f046" />
+
+    <img width="1918" height="1025" alt="image" src="https://github.com/user-attachments/assets/d9ffa2af-b949-4b35-8033-8b49766cde5a" />
+
+* Vẽ biểu đồ Nhiệt độ & Độ ẩm:
+
+  * Ở menu bên trái bấm vào Dashboards -> Chọn Create Dashboard -> Bấm vào dấu `+` dưới phần Panel -> Chọn Configure visualization
+ 
+    <img width="1918" height="1021" alt="image" src="https://github.com/user-attachments/assets/d2846919-b9bd-43f9-82c6-0f1fb2520181" />
+
+  * Tại trong phần Configure visualization thêm Code Flux vào ô màu đen ở nửa dưới màn hình (dưới chữ A)
+
+    <img width="1918" height="1021" alt="image" src="https://github.com/user-attachments/assets/a0f26770-deee-4c54-8c24-fe4ae9647bf6" />
+
+  * Thành quả
+ 
+    <img width="1918" height="1023" alt="image" src="https://github.com/user-attachments/assets/6de404a3-f386-42be-858d-8934a6cde4ad" />
+
+
+ 
+    
