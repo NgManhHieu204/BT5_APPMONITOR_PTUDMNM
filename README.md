@@ -160,7 +160,7 @@ File `docker-compose.yml` sử dụng định dạng YAML để định nghĩa v
 
     <img width="1470" height="238" alt="image" src="https://github.com/user-attachments/assets/bc038304-f901-4b45-b327-463d3a86e2e7" />
 
-  * Gắn tên miền (Public Hostnames): quay lại web Cloudflare, vào mục Public Hostname của Tunnel đó và Add 2 Route: `Sub-domain 1: nodered -> Domain: nguyenmanhhieu.id.vn -> Service URL: http://nodered:1880`, `Sub-domain 2: grafana -> Domain: nguyenmanhhieu.id.vn -> Service URL: http://grafana:3000`
+  * Gắn tên miền (Public Hostnames): quay lại web Cloudflare, vào mục Public Hostname của Tunnel đó và Add 3 Route: `Sub-domain 1: nodered -> Domain: nguyenmanhhieu.id.vn -> Service URL: http://nodered:1880`, `Sub-domain 2: grafana -> Domain: nguyenmanhhieu.id.vn -> Service URL: http://grafana:3000`, ``
  
     <img width="1918" height="1025" alt="image" src="https://github.com/user-attachments/assets/459468a2-5c61-4c0a-9a33-7aef511c717e" />
 
@@ -254,6 +254,90 @@ File `docker-compose.yml` sử dụng định dạng YAML để định nghĩa v
  
     <img width="1918" height="1023" alt="image" src="https://github.com/user-attachments/assets/6de404a3-f386-42be-858d-8934a6cde4ad" />
 
+### 6. Xây dựng giao diện Web (Frontend & Backend API)
 
+* Viết Backend (Flask API)
+
+  * Tạo thư mục `flask_api` và di chuyển vào thư mục `flask_api`: dùng lệnh `mkdir -p ~/baitap5/flask_api && cd ~/baitap5/flask_api`
+
+  * Tạo file `requirements.txt`: dùng lệnh `nano requirements.txt` và thêm thư viện cần thiêt
+
+    <img width="835" height="280" alt="image" src="https://github.com/user-attachments/assets/8d6f9623-d6d6-4ae1-bf39-4d10b8abad58" />
+
+  * Tạo file `Dockerfile`: dùng lệnh `nano Dockerfile` và thêm nội dung
+
+    <img width="828" height="287" alt="image" src="https://github.com/user-attachments/assets/a6694fd1-491b-489b-8ff5-7110f1e458fa" />
+
+  * Tạo file `app.py`: dùng lệnh `nano app.py` và thêm code
+
+    <img width="1420" height="746" alt="image" src="https://github.com/user-attachments/assets/e604fcd9-f209-454e-801e-577fa8016d63" />
+
+* Viết Frontend (Giao diện Web) & Nginx
+
+  * Trở về thư mục gốc và tạo các thư mục Web: `cd ~/baitap5 && mkdir -p nginx/frontend`
  
-    
+  * Tạo file cấu hình Nginx: `nano nginx/nginx.conf`
+ 
+    <img width="975" height="398" alt="image" src="https://github.com/user-attachments/assets/6ea4cb69-5b32-465d-9b6e-9efd0421e66c" />
+
+  * Tạo file Web: `nano nginx/frontend/index.html`
+ 
+    <img width="1422" height="743" alt="image" src="https://github.com/user-attachments/assets/e36c825f-0f2d-4119-a512-134e5f02d763" />
+
+  * Chỉnh sửa lại file docker-compose.yml: thêm 2 services là `flask_api` và `nginx`. Và ở service grafana, thêm 2 dòng biến môi trường vào dưới chữ `TZ: "Asia/Ho_Chi_Minh"`: `GF_SECURITY_ALLOW_EMBEDDING: "true"`, `GF_AUTH_ANONYMOUS_ENABLED: "true"`
+ 
+    <img width="1422" height="748" alt="image" src="https://github.com/user-attachments/assets/3b1e9259-224d-4b28-ac4d-2ab8a59dd27a" />
+
+  * Dùng lệnh `docker compose up -d --build` để khởi động lại hệ thống
+ 
+    <img width="1425" height="750" alt="image" src="https://github.com/user-attachments/assets/f7764e34-f672-49ac-afac-1db6135a0701" />
+
+* Public giao diện Web qua Cloudflare Tunnel: tại `monitor-tunnel` add thêm 1 route cho giao diện web `Sub-domain 3: web -> Domain: nguyenmanhhieu.id.vn -> Service URL: http://nginx:80`
+
+  <img width="902" height="960" alt="image" src="https://github.com/user-attachments/assets/fd66f7fb-7037-4668-bdb5-84c4dacd18cf" />
+
+* Thành quả: truy cập vào `https://web.nguyenmanhhieu.id.vn/` 
+
+  <img width="1918" height="1027" alt="image" src="https://github.com/user-attachments/assets/3585ad0b-6063-4603-928f-958363d772e9" />
+
+### 7. Đóng gói và khôi phục hệ thống (Offline Deployment)
+
+* Đóng gói tất cả ra file nén (Export & Compress): chạy lệnh `docker save $(docker images -aq) | gzip > backup_system.tar.gz` để gom toàn bộ các Image đang có trên máy lại, nén thành 1 file duy nhất tên là `backup_system.tar.gz`. Gõ lệnh `ls -lh` sẽ thấy file `backup_system.tar.gz` nặng 
+
+  <img width="1092" height="192" alt="image" src="https://github.com/user-attachments/assets/b27bf56c-9d46-48d6-b1f4-0cea3ec672d1" />
+
+* Xóa sạch mọi thứ (Giả lập chuyển máy mới)
+
+  * Dùng lệnh `docker ps` và `docker images` để liệt kê các `container` và `images` hiện tại
+
+    <img width="1427" height="707" alt="image" src="https://github.com/user-attachments/assets/81befc45-54a4-4e0c-9d54-3e1eacded3e1" />
+
+  * Dùng lệnh `docker compose down` và `docker rmi -f $(docker images -aq)` để xóa toàn bộ các `container` và `images` hiện tại
+ 
+    <img width="1427" height="536" alt="image" src="https://github.com/user-attachments/assets/0a906ca3-f2bd-4e3f-97ef-77806483c9bd" />
+
+  * Sau khi xóa chỉ còn lại các `container` và `images` không liên quan và các trang như nodered, grafana, web đã dừng hoạt động minh chứng cho việc hệ thống đã bị xóa sạch
+ 
+    <img width="1425" height="510" alt="image" src="https://github.com/user-attachments/assets/bfef5e23-9d92-4038-a2d3-b09356f71952" />
+
+    <img width="1918" height="1026" alt="image" src="https://github.com/user-attachments/assets/35c1556e-04bd-4d0b-8d89-12b3ac34e3d6" />
+
+* Khôi phục lại từ file nén (Import & Restore): chạy lệnh `docker load -i backup_system.tar.gz` để load lại từ file nén và chạy lệnh `docker compose up -d` để khởi chạy lại hệ thống (do file docker-compose.yml vẫn nằm tại thư mục)
+
+  <img width="1425" height="626" alt="image" src="https://github.com/user-attachments/assets/13e36a3d-e5be-489e-b718-53b1df1ffe35" />
+
+  <img width="1416" height="731" alt="image" src="https://github.com/user-attachments/assets/4e54fc01-88c1-4f3d-aca7-8764c6b4ada6" />
+
+* Truy cập lại các trang để xem thành quả
+
+  * Trang Node-RED
+ 
+    <img width="1918" height="1027" alt="image" src="https://github.com/user-attachments/assets/c34371d6-7e8d-4951-bd85-fc227be367c0" />
+
+  * Trang giao diện Web
+
+    <img width="1918" height="1031" alt="image" src="https://github.com/user-attachments/assets/7b76cbb6-7cc7-4cad-80d6-96ac0f75b229" />
+
+  * Trang grafana
+ 
+    <img width="1918" height="1032" alt="image" src="https://github.com/user-attachments/assets/96935aa9-83da-4c0d-a905-75e1e9624619" />
